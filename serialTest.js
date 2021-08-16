@@ -14,12 +14,18 @@ port.on('error', function(err) {
 })
 
 port.on('data', function (data) {
-    console.log('Data:', data.toString())
+    process.stdout.write(data.toString())
 })
 
-port.write(Buffer.from('en\n'), function(err) {
+let commands = `
+    configure terminal\n
+        hostname POD5C2S5\n
+        end\n`
+    ;
+
+port.write(Buffer.from(commands), function(err) {
     if (err) {
       return console.log('Error on write: ', err.message)
     }
-    console.log('message written')
-  })
+    //console.log('message written')
+})
