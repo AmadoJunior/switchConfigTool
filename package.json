@@ -1,0 +1,23 @@
+{
+  "name": "switchconfigtool",
+  "version": "1.0.0",
+  "description": "Gen4",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmadoJunior/switchConfigTool.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AmadoJunior/switchConfigTool/issues"
+  },
+  "homepage": "https://github.com/AmadoJunior/switchConfigTool#readme",
+  "dependencies": {
+    "serialport": "^9.2.0",
+    "yargs": "^17.1.1"
+  }
+}
