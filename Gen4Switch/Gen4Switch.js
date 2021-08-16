@@ -4,6 +4,8 @@ class Gen4Switch{
     //Properties
     #serialPort;
     #portNum;
+    #rackNum;
+    #DHCPStartHost;
     #baudRate;
     #containerNum;
     #switchNum;
@@ -16,6 +18,33 @@ class Gen4Switch{
         this.#containerNum = containerNum;
         this.#switchNum = switchNum;
         this.#password = password;
+
+        switch(this.#switchNum){
+            case 1:
+                this.#DHCPStartHost = 1;
+                this.#rackNum = 1;
+                break;
+            case 2:
+                this.#DHCPStartHost = 48;
+                this.#rackNum = 1;
+                break;
+            case 3:
+                this.#DHCPStartHost = 95;
+                this.#rackNum = 1;
+                break;
+            case 4:
+                this.#DHCPStartHost = 1;
+                this.#rackNum = 2;
+                break;
+            case 5:
+                this.#DHCPStartHost = 48;
+                this.#rackNum = 2;
+                break;
+            case 6:
+                this.#DHCPStartHost = 95;
+                this.#rackNum = 2;
+                break;
+        }
     }
 
     //Methods
@@ -60,7 +89,7 @@ class Gen4Switch{
         let commands = `configure terminal\n`;
         commands += `hostname POD5C${this.#containerNum}S${this.#switchNum}\n`;
         commands += `username admin password POD5Pass555\n`;
-        commands += `ip domain-name bit5ive`;
+        commands += `ip domain-name bit5ive\n`;
         commands += `enable password POD5Pass555\n`;
         commands += `end\n`;
         commands += `wr\n`;
@@ -78,7 +107,7 @@ class Gen4Switch{
         commands += `interface vlan 1\n`;
         commands += `ip address 10.${this.#containerNum}.${this.#switchNum}.100 255.255.0.0\n`;
         commands += `exit\n`;
-        commands += `crypto keys generate rsa\n`;
+        commands += `crypto key generate rsa\n`;
         commands += `768\n`;
         commands += `ip ssh time-out 60\n`;
         commands += `ip ssh authentication-retries 5\n`;
@@ -111,7 +140,7 @@ class Gen4Switch{
     disableHTTPServer(){
         let commands = `configure terminal\n`;
         commands += `no ip http server\n`;
-        commands += `np ip http secure-server\n`;
+        commands += `no ip http secure-server\n`;
         commands += `end\n`;
         commands += `wr\n`;
         
@@ -124,6 +153,18 @@ class Gen4Switch{
 
     setDHCPServer(){
 
+    }
+
+    generateReservationString(){
+        let portNum = 1;
+        let hostNum = this.#DHCPStartHost;
+        let result;
+        for(let i = 1; i < 48; i++){
+            result += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi1/0/${portNum}" ascii\n`;
+            hostNum++;
+            portNum++;
+        }
+        return result;
     }
 }
 
