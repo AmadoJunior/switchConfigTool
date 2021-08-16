@@ -87,10 +87,14 @@ class Gen4Switch{
 
     setCredentials(){
         let commands = `configure terminal\n`;
+        //Hostname
         commands += `hostname POD5C${this.#containerNum}S${this.#switchNum}\n`;
-        commands += `username admin password POD5Pass555\n`;
+        //Login Local User
+        commands += `username admin password ${this.#password}\n`;
+        //Domain
         commands += `ip domain-name bit5ive\n`;
-        commands += `enable password POD5Pass555\n`;
+        //Enable Password
+        commands += `enable password ${this.#password}\n`;
         commands += `end\n`;
         commands += `wr\n`;
         
@@ -101,16 +105,21 @@ class Gen4Switch{
         })
     }
 
-    setSSH(){
+    setupSSH(){
         let commands = `configure terminal\n`;
+        //Default Gateway
         commands += `ip default-gateway 10.${this.#containerNum}.100.100\n`;
+        //VLAN1 SVI
         commands += `interface vlan 1\n`;
         commands += `ip address 10.${this.#containerNum}.${this.#switchNum}.100 255.255.0.0\n`;
         commands += `exit\n`;
+        //Generating RSA Key
         commands += `crypto key generate rsa\n`;
         commands += `768\n`;
+        //SSH Settings
         commands += `ip ssh time-out 60\n`;
         commands += `ip ssh authentication-retries 5\n`;
+        //Terminal Settings
         commands += `line vty 0 15\n`;
         commands += `transport input SSH\n`;
         commands += `login local\n`;
@@ -125,6 +134,7 @@ class Gen4Switch{
 
     setTime(){
         let commands = `configure terminal\n`;
+        //Setting NTP Server && Timezone
         commands += `ntp server 216.239.35.0\n`;
         commands += `clock timezone est -5 0\n`;
         commands += `end\n`;
@@ -139,6 +149,7 @@ class Gen4Switch{
 
     disableHTTPServer(){
         let commands = `configure terminal\n`;
+        //Diasble HTTP Server
         commands += `no ip http server\n`;
         commands += `no ip http secure-server\n`;
         commands += `end\n`;
@@ -151,18 +162,38 @@ class Gen4Switch{
         })
     }
 
-    setDHCPServer(){
-
+    setupDHCPServer(){
+        let commands = `configure terminal\n`;
+        //Port-Based DHCP Settings
+        commands += `ip dhcp use subscriber-id client-id\n`;
+        commands += `ip dhcp subscriber-id interface-name\n`;
+        commands += `interface range Gi1/0/1-47\n`;
+        commands += `ip dhcp server use subscriber-id client-id\n`;
+        commands += `exit\n`;
+        //Configure Pool
+        commands += `ip dhcp pool POOL1\n`;
+        commands += `network 10.${this.#containerNum}.0.0 255.255.0.0\n`;
+        commands += `default-router 10.${this.#containerNum}.100.100\n`;
+        commands += `dns-server 8.8.8.8 4.2.2.2\n`;
+        commands += `reserved-only\n`;
+        //Generate Reservations
+        commands += `${this.generateReservationString()}\n`;
+        commands += `end\n`;
+        commands += `wr\n`;
+        
+        this.#serialPort.write(Buffer.from(commands), (err) => {
+            if (err) {
+              return console.log('Error on Write: ', err.message);
+            }
+        })
     }
 
     generateReservationString(){
-        let portNum = 1;
         let hostNum = this.#DHCPStartHost;
         let result;
-        for(let i = 1; i < 48; i++){
+        for(let portNum = 1; portNum < 48; portNum++){
             result += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi1/0/${portNum}" ascii\n`;
             hostNum++;
-            portNum++;
         }
         return result;
     }
