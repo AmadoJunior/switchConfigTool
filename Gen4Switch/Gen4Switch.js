@@ -10,6 +10,7 @@ class Gen4Switch{
     #containerNum;
     #switchNum;
     #password;
+    #isOpen;
 
     //Constructor
     constructor(portNum, baudRate, containerNum, switchNum, password){
@@ -18,6 +19,7 @@ class Gen4Switch{
         this.#containerNum = containerNum;
         this.#switchNum = switchNum;
         this.#password = password;
+        this.#isOpen = false;
 
         switch(this.#switchNum){
             case 1:
@@ -55,6 +57,7 @@ class Gen4Switch{
             }
         });
         this.#serialPort.on('open', () => {
+            this.#isOpen = true;
             console.log( `Serial Port #${this.#portNum} Opened.`);
         })
         
@@ -196,6 +199,18 @@ class Gen4Switch{
             hostNum++;
         }
         return result;
+    }
+
+    closeConnection(){
+        if(this.#isOpen){
+            console.log("Closing Connection");
+            this.#serialPort.close( err => {
+                console.log(err);
+            })
+            this.#isOpen = false;
+        } else {
+            console.log("Nothing to Close")
+        }
     }
 }
 
