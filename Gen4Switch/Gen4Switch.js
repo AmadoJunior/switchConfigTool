@@ -122,6 +122,7 @@ class Gen4Switch{
         //VLAN1 SVI
         commands += `interface vlan 1\n`;
         commands += `ip address 10.${this.#containerNum}.${this.#switchNum}.100 255.255.0.0\n`;
+        commands += `no shut\n`;
         commands += `exit\n`;
         //Generating RSA Key
         commands += `crypto key generate rsa\n`;
@@ -179,6 +180,7 @@ class Gen4Switch{
         commands += `ip dhcp subscriber-id interface-name\n`;
         commands += `interface range Gi1/0/1-47\n`;
         commands += `ip dhcp server use subscriber-id client-id\n`;
+        commands += `no shut\n`;
         commands += `exit\n`;
         //Configure Pool
         commands += `ip dhcp pool POOL1\n`;
