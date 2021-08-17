@@ -11,14 +11,16 @@ class Gen4Switch{
     #switchNum;
     #password;
     #isOpen;
+    #interfaceNumber
 
     //Constructor
-    constructor(portNum, baudRate, containerNum, switchNum, password){
+    constructor(portNum, baudRate, containerNum, switchNum, password, interfaceNumber){
         this.#portNum = portNum;
         this.#baudRate = baudRate;
         this.#containerNum = containerNum;
         this.#switchNum = switchNum;
         this.#password = password;
+        this.#interfaceNumber = interfaceNumber;
         this.#isOpen = false;
 
         switch(this.#switchNum){
@@ -58,7 +60,12 @@ class Gen4Switch{
         });
         this.#serialPort.on('open', () => {
             this.#isOpen = true;
-            console.log( `Serial Port #${this.#portNum} Opened.`);
+            console.log(`Serial Port #${this.#portNum} Opened.`);
+        })
+
+        this.#serialPort.on('close', () => {
+            this.#isOpen = false;
+            console.log(`Serial Port #${this.#portNum} Closed.`)
         })
         
         this.#serialPort.on('error', (err) => {
@@ -80,7 +87,7 @@ class Gen4Switch{
     }
 
     enableProtected(){
-        let commands = `\nno\nen\n${this.#password}\n`;
+        let commands = `\nno\nen\n${this.#password}\n\n`;
         this.#serialPort.write(Buffer.from(commands), (err) => {
             if (err) {
               return console.log('Error on Write: ', err.message);
@@ -179,11 +186,19 @@ class Gen4Switch{
         commands += `default-router 10.${this.#containerNum}.100.100\n`;
         commands += `dns-server 8.8.8.8 4.2.2.2\n`;
         commands += `reserved-only\n`;
+        
+        this.#serialPort.write(Buffer.from(commands), (err) => {
+            if (err) {
+              return console.log('Error on Write: ', err.message);
+            }
+        })
+
         //Generate Reservations
+        commands = "";
         commands += `${this.generateReservationString()}\n`;
         commands += `end\n`;
         commands += `wr\n`;
-        
+
         this.#serialPort.write(Buffer.from(commands), (err) => {
             if (err) {
               return console.log('Error on Write: ', err.message);
@@ -193,9 +208,9 @@ class Gen4Switch{
 
     generateReservationString(){
         let hostNum = this.#DHCPStartHost;
-        let result;
+        let result = "";
         for(let portNum = 1; portNum < 48; portNum++){
-            result += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi1/0/${portNum}" ascii\n`;
+            result += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi${this.#interfaceNumber}/0/${portNum}" ascii\n`;
             hostNum++;
         }
         return result;
