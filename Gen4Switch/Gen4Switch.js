@@ -10,7 +10,7 @@ class Gen4Switch{
     #containerNum;
     #switchNum;
     #password;
-    #isOpen;
+    isOpen;
     #interfaceNumber
 
     //Constructor
@@ -21,7 +21,7 @@ class Gen4Switch{
         this.#switchNum = switchNum;
         this.#password = password;
         this.#interfaceNumber = interfaceNumber;
-        this.#isOpen = false;
+        this.isOpen = false;
 
         switch(this.#switchNum){
             case 1:
@@ -55,16 +55,17 @@ class Gen4Switch{
     initPort(){
         this.#serialPort = new SerialPort(`/dev/ttyS${this.#portNum}`, {baudRate: this.#baudRate}, (err) => {
             if(err){
+                this.isOpen = false;
                 return console.log("Error: " + err.message);
             }
         });
         this.#serialPort.on('open', () => {
-            this.#isOpen = true;
+            this.isOpen = true;
             console.log(`Serial Port #${this.#portNum} Opened.`);
         })
 
         this.#serialPort.on('close', () => {
-            this.#isOpen = false;
+            this.isOpen = false;
             console.log(`Serial Port #${this.#portNum} Closed.`)
         })
         
@@ -84,6 +85,7 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nEnabled =========================================\n");
     }
 
     enableProtected(){
@@ -93,6 +95,7 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nEnabled =========================================\n");
     }
 
     setCredentials(){
@@ -113,6 +116,7 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nCredentials Set =========================================\n");
     }
 
     setupSSH(){
@@ -141,6 +145,7 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nSSH Setup =========================================\n");
     }
 
     setTime(){
@@ -156,6 +161,7 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nNTP Setup =========================================\n");
     }
 
     disableHTTPServer(){
@@ -171,6 +177,7 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nHTTP Servers Disabled =========================================\n");
     }
 
     setupDHCPServer(){
@@ -183,6 +190,7 @@ class Gen4Switch{
         commands += `no shut\n`;
         commands += `exit\n`;
         //Configure Pool
+        commands += `no ip dhcp pool POOL1\n`;
         commands += `ip dhcp pool POOL1\n`;
         commands += `network 10.${this.#containerNum}.0.0 255.255.0.0\n`;
         commands += `default-router 10.${this.#containerNum}.100.100\n`;
@@ -194,37 +202,44 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nDHCP Settings Set && Pool Created =========================================\n");
 
         //Generate Reservations
+        this.generateReservations();
         commands = "";
-        commands += `${this.generateReservationString()}\n`;
         commands += `end\n`;
         commands += `wr\n`;
-
         this.#serialPort.write(Buffer.from(commands), (err) => {
             if (err) {
-              return console.log('Error on Write: ', err.message);
+            return console.log('Error on Write: ', err.message);
             }
         })
+        console.log("\nReservations Created =========================================\n");
     }
 
-    generateReservationString(){
+    generateReservations(){
         let hostNum = this.#DHCPStartHost;
-        let result = "";
+        let commands = "";
         for(let portNum = 1; portNum < 48; portNum++){
-            result += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi${this.#interfaceNumber}/0/${portNum}" ascii\n`;
+            //Generate Reservations
+            commands = "";
+            commands += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi${this.#interfaceNumber}/0/${portNum}" ascii\n`;
+            this.#serialPort.write(Buffer.from(commands), (err) => {
+                if (err) {
+                return console.log('Error on Write: ', err.message);
+                }
+            })
             hostNum++;
         }
-        return result;
     }
 
     closeConnection(){
-        if(this.#isOpen){
+        if(this.isOpen){
             console.log("Closing Connection");
             this.#serialPort.close( err => {
                 console.log(err);
             })
-            this.#isOpen = false;
+            this.isOpen = false;
         } else {
             console.log("Nothing to Close")
         }
