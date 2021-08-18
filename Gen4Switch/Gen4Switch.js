@@ -85,7 +85,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nEnabled =========================================\n");
     }
 
     enableProtected(){
@@ -95,7 +94,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nEnabled =========================================\n");
     }
 
     setCredentials(){
@@ -116,7 +114,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nCredentials Set =========================================\n");
     }
 
     setupSSH(){
@@ -145,7 +142,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nSSH Setup =========================================\n");
     }
 
     setTime(){
@@ -161,7 +157,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nNTP Setup =========================================\n");
     }
 
     disableHTTPServer(){
@@ -177,7 +172,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nHTTP Servers Disabled =========================================\n");
     }
 
     setupDHCPServer(){
@@ -202,7 +196,6 @@ class Gen4Switch{
               return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nDHCP Settings Set && Pool Created =========================================\n");
 
         //Generate Reservations
         this.generateReservations();
@@ -214,7 +207,6 @@ class Gen4Switch{
             return console.log('Error on Write: ', err.message);
             }
         })
-        console.log("\nReservations Created =========================================\n");
     }
 
     generateReservations(){
@@ -236,10 +228,18 @@ class Gen4Switch{
     closeConnection(){
         if(this.isOpen){
             console.log("Closing Connection");
-            this.#serialPort.close( err => {
-                console.log(err);
+            this.#serialPort.drain( err => {
+                if(err){
+                    console.log(err);
+                } else {
+                    this.#serialPort.close( err => {
+                        console.log(err);
+                    })
+                    this.isOpen = false;
+                }
+                
             })
-            this.isOpen = false;
+            
         } else {
             console.log("Nothing to Close")
         }
