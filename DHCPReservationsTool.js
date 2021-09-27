@@ -23,17 +23,5 @@ if(parseInt(argv.protected) === 1){
     mySwitch.enable();
 }
 
-//SetCreds
-mySwitch.setCredentials();
-
-//Setup SSH
-mySwitch.setupSSH();
-
-//Set Time
-mySwitch.setTime();
-
-//Disable HTTP Server (Optional)
-mySwitch.disableHTTPServer();
-
 //Setup DHCP Server
-//mySwitch.setupDHCPServer();
+mySwitch.setupDHCPServer();

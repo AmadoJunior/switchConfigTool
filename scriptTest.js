@@ -4,4 +4,4 @@ const mySwitch = new Gen4Switch(7, 9600, 2, 5, "POD5Pass555", 1);
 mySwitch.initPort();
 mySwitch.enableProtected();
 mySwitch.setupDHCPServer();
-//mySwitch.closeConnection();
+mySwitch.closeConnection();

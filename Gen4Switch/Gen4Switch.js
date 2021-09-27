@@ -179,7 +179,7 @@ class Gen4Switch{
         //Port-Based DHCP Settings
         commands += `ip dhcp use subscriber-id client-id\n`;
         commands += `ip dhcp subscriber-id interface-name\n`;
-        commands += `interface range Gi1/0/1-47\n`;
+        commands += `interface range Gi${this.#interfaceNumber}/0/1-47\n`;
         commands += `ip dhcp server use subscriber-id client-id\n`;
         commands += `no shut\n`;
         commands += `exit\n`;
