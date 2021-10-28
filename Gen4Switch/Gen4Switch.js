@@ -122,7 +122,7 @@ class Gen4Switch{
         commands += `ip default-gateway 10.${this.#containerNum}.100.100\n`;
         //VLAN1 SVI
         commands += `interface vlan 1\n`;
-        commands += `ip address 10.${this.#containerNum}.${this.#switchNum}.100 255.255.0.0\n`;
+        commands += `ip address 10.${this.#containerNum}.${this.#switchNum}.200 255.255.0.0\n`;
         commands += `no shut\n`;
         commands += `exit\n`;
         //Generating RSA Key
