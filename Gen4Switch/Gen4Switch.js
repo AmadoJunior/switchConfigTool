@@ -103,7 +103,7 @@ class Gen4Switch{
         //Login Local User
         commands += `username admin password ${this.#password}\n`;
         //Domain
-        commands += `ip domain-name bit5ive\n`;
+        commands += `ip domain-name uta.local\n`;
         //Enable Password
         commands += `enable password ${this.#password}\n`;
         commands += `end\n`;
