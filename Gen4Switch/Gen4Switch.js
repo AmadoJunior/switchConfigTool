@@ -14,9 +14,10 @@ class Gen4Switch{
     #interfaceNumber
 
     //Constructor
-    constructor(portNum, baudRate, containerNum, switchNum, password, interfaceNumber){
+    constructor(portNum, baudRate, generation, containerNum, switchNum, password, interfaceNumber){
         this.#portNum = portNum;
         this.#baudRate = baudRate;
+        this.#generation = generation;
         this.#containerNum = containerNum;
         this.#switchNum = switchNum;
         this.#password = password;
@@ -99,7 +100,7 @@ class Gen4Switch{
     setCredentials(){
         let commands = `configure terminal\n`;
         //Hostname
-        commands += `hostname POD5C${this.#containerNum}S${this.#switchNum}\n`;
+        commands += `hostname POD5C${(this.#generation*10) + this.#containerNum}S${this.#switchNum}\n`;
         //Login Local User
         commands += `username admin password ${this.#password}\n`;
         //Domain
@@ -119,10 +120,10 @@ class Gen4Switch{
     setupSSH(){
         let commands = `configure terminal\n`;
         //Default Gateway
-        commands += `ip default-gateway 10.${this.#containerNum}.100.100\n`;
+        commands += `ip default-gateway 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
         //VLAN1 SVI
         commands += `interface vlan 1\n`;
-        commands += `ip address 10.${this.#containerNum}.${this.#switchNum}.200 255.255.0.0\n`;
+        commands += `ip address 10.${(this.#generation*10) + this.#containerNum}.${this.#switchNum}.200 255.255.0.0\n`;
         commands += `no shut\n`;
         commands += `exit\n`;
         //Generating RSA Key
@@ -186,8 +187,8 @@ class Gen4Switch{
         //Configure Pool
         commands += `no ip dhcp pool POOL1\n`;
         commands += `ip dhcp pool POOL1\n`;
-        commands += `network 10.${this.#containerNum}.0.0 255.255.0.0\n`;
-        commands += `default-router 10.${this.#containerNum}.100.100\n`;
+        commands += `network 10.${(this.#generation*10) + this.#containerNum}.0.0 255.255.0.0\n`;
+        commands += `default-router 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
         commands += `dns-server 8.8.8.8 4.2.2.2\n`;
         commands += `reserved-only\n`;
         
@@ -215,7 +216,7 @@ class Gen4Switch{
         for(let portNum = 1; portNum < 48; portNum++){
             //Generate Reservations
             commands = "";
-            commands += `address 10.${this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi${this.#interfaceNumber}/0/${portNum}" ascii\n`;
+            commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi${this.#interfaceNumber}/0/${portNum}" ascii\n`;
             this.#serialPort.write(Buffer.from(commands), (err) => {
                 if (err) {
                 return console.log('Error on Write: ', err.message);
