@@ -7,6 +7,7 @@ class Gen4Switch{
     #rackNum;
     #DHCPStartHost;
     #baudRate;
+    #generation;
     #containerNum;
     #switchNum;
     #password;
@@ -54,7 +55,7 @@ class Gen4Switch{
 
     //Methods
     initPort(){
-        this.#serialPort = new SerialPort(`/dev/ttyS${this.#portNum}`, {baudRate: this.#baudRate}, (err) => {
+        this.#serialPort = new SerialPort(`COM${this.#portNum}`, {baudRate: this.#baudRate}, (err) => {
             if(err){
                 this.isOpen = false;
                 return console.log("Error: " + err.message);
@@ -104,7 +105,7 @@ class Gen4Switch{
         //Login Local User
         commands += `username admin password ${this.#password}\n`;
         //Domain
-        commands += `ip domain-name uta.local\n`;
+        commands += `ip domain-name uta.POD5C${(this.#generation*10) + this.#containerNum}S${this.#switchNum}.local\n`;
         //Enable Password
         commands += `enable password ${this.#password}\n`;
         commands += `end\n`;
