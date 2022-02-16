@@ -12,16 +12,18 @@ class Gen4Switch{
     #switchNum;
     #password;
     isOpen;
+    #interfaceName;
     #interfaceNumber
 
     //Constructor
-    constructor(portNum, baudRate, generation, containerNum, switchNum, password, interfaceNumber){
+    constructor(portNum, baudRate, generation, containerNum, switchNum, password, interfaceName, interfaceNumber){
         this.#portNum = portNum;
         this.#baudRate = baudRate;
         this.#generation = generation;
         this.#containerNum = containerNum;
         this.#switchNum = switchNum;
         this.#password = password;
+        this.#interfaceName = interfaceName;
         this.#interfaceNumber = interfaceNumber;
         this.isOpen = false;
 
@@ -101,11 +103,21 @@ class Gen4Switch{
     setCredentials(){
         let commands = `configure terminal\n`;
         //Hostname
-        commands += `hostname POD5C${(this.#generation*10) + this.#containerNum}S${this.#switchNum}\n`;
+        if(parseInt(this.#switchNum) === -1){
+            commands += `hostname POD5C${(this.#generation*10) + this.#containerNum}P1\n`;
+        } else {
+            commands += `hostname POD5C${(this.#generation*10) + this.#containerNum}S${this.#switchNum}\n`;
+        }
+        
         //Login Local User
         commands += `username admin password ${this.#password}\n`;
         //Domain
-        commands += `ip domain-name uta.POD5C${(this.#generation*10) + this.#containerNum}S${this.#switchNum}.local\n`;
+        if(parseInt(this.#switchNum) === -1){
+            commands += `ip domain-name uta.POD5C${(this.#generation*10) + this.#containerNum}P1.local\n`;
+        } else {
+            commands += `ip domain-name uta.POD5C${(this.#generation*10) + this.#containerNum}S${this.#switchNum}.local\n`;
+        }
+        
         //Enable Password
         commands += `enable password ${this.#password}\n`;
         commands += `end\n`;
@@ -124,7 +136,12 @@ class Gen4Switch{
         commands += `ip default-gateway 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
         //VLAN1 SVI
         commands += `interface vlan 1\n`;
-        commands += `ip address 10.${(this.#generation*10) + this.#containerNum}.${this.#switchNum}.200 255.255.0.0\n`;
+        if(parseInt(this.#switchNum) === -1){
+            commands += `ip address 10.${(this.#generation*10) + this.#containerNum}.100.200 255.255.0.0\n`;
+        } else {
+            commands += `ip address 10.${(this.#generation*10) + this.#containerNum}.${this.#switchNum}.200 255.255.0.0\n`;
+        }
+        
         commands += `no shut\n`;
         commands += `exit\n`;
         //Generating RSA Key
@@ -181,7 +198,8 @@ class Gen4Switch{
         //Port-Based DHCP Settings
         commands += `ip dhcp use subscriber-id client-id\n`;
         commands += `ip dhcp subscriber-id interface-name\n`;
-        commands += `interface range Gi${this.#interfaceNumber}/0/1-47\n`;
+
+        commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/1-47\n`) : (`${this.#interfaceNumber}/1-47`) }\n`;
         commands += `ip dhcp server use subscriber-id client-id\n`;
         commands += `no shut\n`;
         commands += `exit\n`;
@@ -217,7 +235,7 @@ class Gen4Switch{
         for(let portNum = 1; portNum < 48; portNum++){
             //Generate Reservations
             commands = "";
-            commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "Gi${this.#interfaceNumber}/0/${portNum}" ascii\n`;
+            commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/${portNum}`) : (`${this.#interfaceNumber}/${portNum}`) }" ascii\n`;
             this.#serialPort.write(Buffer.from(commands), (err) => {
                 if (err) {
                 return console.log('Error on Write: ', err.message);
