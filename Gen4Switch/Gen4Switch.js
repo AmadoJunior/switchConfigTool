@@ -146,7 +146,7 @@ class Gen4Switch{
         commands += `exit\n`;
         //Generating RSA Key
         commands += `crypto key generate rsa\n`;
-        commands += `768\n`;
+        commands += `2048\n`;
         //SSH Settings
         commands += `ip ssh time-out 60\n`;
         commands += `ip ssh authentication-retries 5\n`;
@@ -198,50 +198,91 @@ class Gen4Switch{
         //Port-Based DHCP Settings
         commands += `ip dhcp use subscriber-id client-id\n`;
         commands += `ip dhcp subscriber-id interface-name\n`;
+        if(parseInt(this.#switchNum) === -1){
+            commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/37-38\n`) : (`${this.#interfaceNumber}/37-38`) }\n`;
+            commands += `ip dhcp server use subscriber-id client-id\n`;
+            commands += `no shut\n`;
+            commands += `exit\n`;
+            //Configure Pool
+            commands += `no ip dhcp pool POOL2\n`;
+            commands += `ip dhcp pool POOL2\n`;
+            commands += `network 10.${(this.#generation*10) + this.#containerNum}.0.0 255.255.0.0\n`;
+            commands += `default-router 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
+            commands += `dns-server 8.8.8.8 4.2.2.2\n`;
+            commands += `reserved-only\n`;
 
-        commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/1-47\n`) : (`${this.#interfaceNumber}/1-47`) }\n`;
-        commands += `ip dhcp server use subscriber-id client-id\n`;
-        commands += `no shut\n`;
-        commands += `exit\n`;
-        //Configure Pool
-        commands += `no ip dhcp pool POOL1\n`;
-        commands += `ip dhcp pool POOL1\n`;
-        commands += `network 10.${(this.#generation*10) + this.#containerNum}.0.0 255.255.0.0\n`;
-        commands += `default-router 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
-        commands += `dns-server 8.8.8.8 4.2.2.2\n`;
-        commands += `reserved-only\n`;
-        
-        this.#serialPort.write(Buffer.from(commands), (err) => {
-            if (err) {
-              return console.log('Error on Write: ', err.message);
-            }
-        })
-
-        //Generate Reservations
-        this.generateReservations();
-        commands = "";
-        commands += `end\n`;
-        commands += `wr\n`;
-        this.#serialPort.write(Buffer.from(commands), (err) => {
-            if (err) {
-            return console.log('Error on Write: ', err.message);
-            }
-        })
-    }
-
-    generateReservations(){
-        let hostNum = this.#DHCPStartHost;
-        let commands = "";
-        for(let portNum = 1; portNum < 48; portNum++){
-            //Generate Reservations
-            commands = "";
-            commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/${portNum}`) : (`${this.#interfaceNumber}/${portNum}`) }" ascii\n`;
             this.#serialPort.write(Buffer.from(commands), (err) => {
                 if (err) {
                 return console.log('Error on Write: ', err.message);
                 }
             })
-            hostNum++;
+
+            //Generate Reservations
+            this.generateReservations();
+            commands = "";
+            commands += `end\n`;
+            commands += `wr\n`;
+            this.#serialPort.write(Buffer.from(commands), (err) => {
+                if (err) {
+                return console.log('Error on Write: ', err.message);
+                }
+            })            
+        } else {
+            commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/1-47\n`) : (`${this.#interfaceNumber}/1-47`) }\n`;
+            commands += `ip dhcp server use subscriber-id client-id\n`;
+            commands += `no shut\n`;
+            commands += `exit\n`;
+            //Configure Pool
+            commands += `no ip dhcp pool POOL1\n`;
+            commands += `ip dhcp pool POOL1\n`;
+            commands += `network 10.${(this.#generation*10) + this.#containerNum}.0.0 255.255.0.0\n`;
+            commands += `default-router 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
+            commands += `dns-server 8.8.8.8 4.2.2.2\n`;
+            commands += `reserved-only\n`;
+            
+            this.#serialPort.write(Buffer.from(commands), (err) => {
+                if (err) {
+                return console.log('Error on Write: ', err.message);
+                }
+            })
+
+            //Generate Reservations
+            this.generateReservations();
+            commands = "";
+            commands += `end\n`;
+            commands += `wr\n`;
+            this.#serialPort.write(Buffer.from(commands), (err) => {
+                if (err) {
+                return console.log('Error on Write: ', err.message);
+                }
+            })
+        }
+    }
+
+    generateReservations(){
+        if(parseInt(this.#switchNum) === -1){
+            let commands = "";
+            commands += `address 10.${(this.#generation*10) + this.#containerNum}.100.37 client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/37`) : (`${this.#interfaceNumber}/37`) }" ascii\n`;
+            commands += `address 10.${(this.#generation*10) + this.#containerNum}.100.38 client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/38`) : (`${this.#interfaceNumber}/38`) }" ascii\n`;
+            this.#serialPort.write(Buffer.from(commands), (err) => {
+                if (err) {
+                return console.log('Error on Write: ', err.message);
+                }
+            })
+        } else {
+            let hostNum = this.#DHCPStartHost;
+            let commands = "";
+            for(let portNum = 1; portNum < 48; portNum++){
+                //Generate Reservations
+                commands = "";
+                commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/${portNum}`) : (`${this.#interfaceNumber}/${portNum}`) }" ascii\n`;
+                this.#serialPort.write(Buffer.from(commands), (err) => {
+                    if (err) {
+                    return console.log('Error on Write: ', err.message);
+                    }
+                })
+                hostNum++;
+            }
         }
     }
 
