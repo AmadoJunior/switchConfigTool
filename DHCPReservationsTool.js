@@ -4,7 +4,7 @@ const { hideBin } = require('yargs/helpers');
 const argv = yargs(hideBin(process.argv)).argv;
 
 /**
- * Arguments Example: node switchConfigTool.js --usbPortNum=7 --baudRate=9600 --generation=4 --containerNum=2 --switchNum=5 --password=POD5Pass555 --interfaceName=Gi --interfaceNumber=1 --protected=0
+ * Arguments Example: node switchConfigTool.js --usbPortNum=7 --baudRate=9600 --generation=4 --containerNum=2 --switchNum=5 --password=POD5Pass555 --interfaceName=Gi --interfaceNumber=1 --protected=0 --si=0
  */
 
 const mySwitch = new Gen4Switch(parseInt(argv.usbPortNum), 
@@ -13,8 +13,9 @@ const mySwitch = new Gen4Switch(parseInt(argv.usbPortNum),
                                 parseInt(argv.containerNum), 
                                 parseInt(argv.switchNum), 
                                 argv.password,
-                                (argv.interfaceName),
-                                parseInt(argv.interfaceNumber));
+                                argv.interfaceName,
+                                parseInt(argv.interfaceNumber),
+                                parseInt(argv.si));
 //Open Port             
 mySwitch.initPort();
 

@@ -13,10 +13,11 @@ class Gen4Switch{
     #password;
     isOpen;
     #interfaceName;
-    #interfaceNumber
+    #interfaceNumber;
+    #si;
 
     //Constructor
-    constructor(portNum, baudRate, generation, containerNum, switchNum, password, interfaceName, interfaceNumber){
+    constructor(portNum, baudRate, generation, containerNum, switchNum, password, interfaceName, interfaceNumber, si){
         this.#portNum = portNum;
         this.#baudRate = baudRate;
         this.#generation = generation;
@@ -26,6 +27,7 @@ class Gen4Switch{
         this.#interfaceName = interfaceName;
         this.#interfaceNumber = interfaceNumber;
         this.isOpen = false;
+        this.#si = si;
 
         switch(this.#switchNum){
             case 1:
@@ -199,7 +201,7 @@ class Gen4Switch{
         commands += `ip dhcp use subscriber-id client-id\n`;
         commands += `ip dhcp subscriber-id interface-name\n`;
         if(parseInt(this.#switchNum) === -1){
-            commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/37-38\n`) : (`${this.#interfaceNumber}/37-38`) }\n`;
+            commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi" && !this.#si) ? (`${this.#interfaceNumber}/0/37-38\n`) : (`${this.#interfaceNumber}/37-38`) }\n`;
             commands += `ip dhcp server use subscriber-id client-id\n`;
             commands += `no shut\n`;
             commands += `exit\n`;
@@ -228,7 +230,7 @@ class Gen4Switch{
                 }
             })            
         } else {
-            commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/1-47\n`) : (`${this.#interfaceNumber}/1-47`) }\n`;
+            commands += `interface range ${this.#interfaceName}${ (this.#interfaceName == "Gi" && !this.#si) ? (`${this.#interfaceNumber}/0/1-47\n`) : (`${this.#interfaceNumber}/1-47`) }\n`;
             commands += `ip dhcp server use subscriber-id client-id\n`;
             commands += `no shut\n`;
             commands += `exit\n`;
@@ -262,8 +264,8 @@ class Gen4Switch{
     generateReservations(){
         if(parseInt(this.#switchNum) === -1){
             let commands = "";
-            commands += `address 10.${(this.#generation*10) + this.#containerNum}.100.37 client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/37`) : (`${this.#interfaceNumber}/37`) }" ascii\n`;
-            commands += `address 10.${(this.#generation*10) + this.#containerNum}.100.38 client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/38`) : (`${this.#interfaceNumber}/38`) }" ascii\n`;
+            commands += `address 10.${(this.#generation*10) + this.#containerNum}.100.37 client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi" && !this.#si) ? (`${this.#interfaceNumber}/0/37`) : (`${this.#interfaceNumber}/37`) }" ascii\n`;
+            commands += `address 10.${(this.#generation*10) + this.#containerNum}.100.38 client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi" && !this.#si) ? (`${this.#interfaceNumber}/0/38`) : (`${this.#interfaceNumber}/38`) }" ascii\n`;
             this.#serialPort.write(Buffer.from(commands), (err) => {
                 if (err) {
                 return console.log('Error on Write: ', err.message);
@@ -275,7 +277,7 @@ class Gen4Switch{
             for(let portNum = 1; portNum < 48; portNum++){
                 //Generate Reservations
                 commands = "";
-                commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi") ? (`${this.#interfaceNumber}/0/${portNum}`) : (`${this.#interfaceNumber}/${portNum}`) }" ascii\n`;
+                commands += `address 10.${(this.#generation*10) + this.#containerNum}.${this.#rackNum}.${hostNum} client-id "${this.#interfaceName}${ (this.#interfaceName == "Gi" && !this.#si) ? (`${this.#interfaceNumber}/0/${portNum}`) : (`${this.#interfaceNumber}/${portNum}`) }" ascii\n`;
                 this.#serialPort.write(Buffer.from(commands), (err) => {
                     if (err) {
                     return console.log('Error on Write: ', err.message);
