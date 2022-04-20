@@ -137,8 +137,11 @@ class Gen4Switch{
         //Default Gateway
         commands += `ip default-gateway 10.${(this.#generation*10) + this.#containerNum}.100.100\n`;
         //Setup VTP
-        commands += `vtp mode client\n`;
-        commands += `vtp mode domain POD5\n`;
+        // commands += `vtp mode client\n`;
+        // commands += `vtp mode domain POD5\n`;
+        //Setup VLAN
+        commands += `vlan ${(this.#generation*10) + this.#containerNum}\n`;
+        commands += `exit\n`;
         //VLAN<Gateway> SVI
         commands += `interface vlan ${(this.#generation*10) + this.#containerNum}\n`;
         if(parseInt(this.#switchNum) === -1){
